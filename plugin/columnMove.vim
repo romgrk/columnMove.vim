@@ -5,16 +5,16 @@
 " Description: Move up&down until next/previous whitespace.
 " !::exe [let g:columnMove_debug = 1 | So]
 "==============================================================================
-if exists('did_columnMove_init')
+if exists('did_columnMove_loaded')
         \ && !exists('columnMove_debug')
     finish
 end
-let did_columnMove_init = 1
+let did_columnMove_loaded = 1
 
 noremap <expr> <Plug>ColumnMoveUp   columnMove#UpMap()
 noremap <expr> <Plug>ColumnMoveDown columnMove#DownMap()
 
-if !exists('g:columnMove_mappings')
+if !exists('columnMove_mappings')
         \ || get(g:, 'columnMove_mappings', 1)==1
     nmap gk    <Plug>ColumnMoveUp
     nmap gj    <Plug>ColumnMoveDown
