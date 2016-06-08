@@ -3,16 +3,8 @@
 
 Move to the end/start of vertical block.
 
-If the cursor is on a whitespace and/or virtual-column:
--> Move to the next character in column that matches `'\S'`
-
-If the cursor is on a non-whitespace character:
--> Move to the last character in column that matches `'\S'`
-
-
-Here is a low-quality screencast:
-
-![alt text](./demo.gif "")
+ - If the cursor is on a whitespace and/or virtual-column, moves to the next character in column that matches `'\S'` (any non-whitespace).
+ - If the cursor is on a non-whitespace character, moves to the last character in column that matches `'\S'` before a `'^$'` (empty) match is found.
 
 
 
@@ -25,12 +17,41 @@ xmap <A-k> <Plug>ColumnMoveUp
 xmap <A-j> <Plug>ColumnMoveDown
 ```
 
+
+Consider the following text, with cursor at `[x]`; repeatedly pressing
+`<Plug>ColumnMoveDown` would take you to the marked positions.
+```viml
+" .......     ........ [x]...........................
+"
+" ......................1............................
+" ...................................................
+" ......................2............................
+"
+" ...................
+"  .......   ........   3....
+" .... ..    .... ..    ..................
+" .... ..    .... ..    4...................
+" .... ..
+" .... ..
+" .... ..
+" .... ..... .... ..... 5.................
+" .... ..... .... ..... ....................
+"                       ....................
+"                       6...................
+"EOF
+```
+
+Here is a low-quality screencast:
+
+![alt text](./demo.gif "")
+
+
+### Other
+
 ```viml
 let did_columnMove_loaded = 1 " Disable plugin:
 let columnMove_mappings = 0   " Disable default mappings:
 ```
-
-## Demo:                           
 
 ## License
 
