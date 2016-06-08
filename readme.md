@@ -59,7 +59,5 @@ JSON
 
 ## Credits
 
-[Learn Vimscript the Hard Way][1] (eternal thanks to Steve Losh)
-
-[1](http://learnvimscriptthehardway.stevelosh.com/)
+[Learn Vimscript the Hard Way](http://learnvimscriptthehardway.stevelosh.com/) (eternal thanks to Steve Losh)
 
