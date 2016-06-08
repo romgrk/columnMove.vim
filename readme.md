@@ -9,6 +9,13 @@ If the cursor is on a whitespace and/or virtual-column:
 If the cursor is on a non-whitespace character:
 -> Move to the last character in column that matches `'\S'`
 
+
+Here is a low-quality screencast:
+
+![alt text](./demo.gif "")
+
+
+
 Usage: (default mappings)
 
 ```viml
@@ -34,6 +41,4 @@ JSON
 [Learn Vimscript the Hard Way][1] (eternal thanks to Steve Losh)
 
 [1](http://learnvimscriptthehardway.stevelosh.com/)
-
-<!--![alt text](./pp_self2.png "")-->
 
