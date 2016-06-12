@@ -50,6 +50,8 @@ Here is a low-quality screencast:
 
 Untested and not intended for use with `set wrap`.
 
+Doesn't (currently) work with tabs and fancy double-width characters.
+
 ### Other
 
 ```viml
