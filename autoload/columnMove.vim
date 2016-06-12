@@ -3,47 +3,71 @@
 " Author: romgrk
 " Date: 08 Jun 2016
 " Description: here
-" !::exe [So]
+" !::exe [match b_pink /@/ | So | so %:h:h/plugin/columnMove.vim]
 "==============================================================================
 
 " Avoid making stupid mistakes.
 let s:UP   = -1
 let s:DOWN = 1
 
+" Boolean values
+let s:false = 0
+let s:true = 1
+
 " Returns character at (lnum, colnum) (1-indexed)
 function! s:charAt (lnum, colnum)
     return getline(a:lnum)[a:colnum - 1]
 endfunc
 
+" Builds a search pattern from the passed parameters
+let s:placeholder = '@'
+function! s:P (c, atoms)
+    let subPatterns = copy(a:atoms)
+    let subPatterns = map(subPatterns, 'printf("(%s)", v:val)')
+    let pattern = '\v' . join(subPatterns, '|')
+    let pattern = substitute(pattern, s:placeholder, a:c, 'g')
+    return pattern
+endfunc
 
 " Returns the end-of-current or start-of-next vertical block boundary
-function! columnMove#FindBoundary (direction, ...)
+function! columnMove#FindBoundary (direction)
     let direction = a:direction
-    let lnum = get(a:000, 1, line('.')) "  search from cursor-line
-    let colnum = col('.')      " 1-based column number
+    let startLine = line('.') "  search from cursor-line
+    let col       = col('.')      " 1-based column number
 
-    let matchAtEnd = v:false
-    let pattern = '\v\S'
+    let pattern = s:P(col,
+                \ ['%@c\S', '\S%@c\s'])
+    let matchEnd = s:false
 
-    let lnum = lnum + direction
+    let lnum = startLine + direction
 
-    if (s:charAt(lnum, colnum) =~# '\v\S')
-        let pattern = '\v^$'
-        let matchAtEnd = v:true
+    if (getline(lnum) =~# pattern)
+        let pattern = s:P(col,
+                    \ ['^.*$%<@c', '^\s*%@c\s', '%@c\s*$'])
+        let matchEnd = s:true
     end
 
     while (lnum >= 0 && lnum <= line('$'))
-        if (s:charAt(lnum, colnum) =~# pattern)
+        if (getline(lnum) =~# pattern)
             break
         end
         let lnum += direction
     endwhile
 
-    if (matchAtEnd == v:true)
-        return [lnum - direction, colnum]
+    if (matchEnd == s:true)
+        let nextLine = lnum - direction
     else
-        return [lnum, colnum]
+        let nextLine = lnum
     end
+
+    call s:log('char', s:charAt(startLine, col))
+    call s:log('patt', pattern)
+    call s:log('col', col)
+    call s:log('startLine', startLine)
+    call s:log('nextLine', nextLine)
+    call s:log('nextChar', s:charAt(nextLine, col))
+
+    return [nextLine, l:col]
 endfunc
 
 " Set cursor position to next boundary
@@ -55,54 +79,68 @@ endfunc
 
 " Returns normal-keys to set cursor position to upper boundary
 function! columnMove#UpMap ()
-    let [lnum, colnum] = columnMove#FindBoundary(s:UP)
-    return (line('.') - lnum) . 'k'
+    return columnMove#Map(s:UP)
 endfunc
 
 " Returns normal-keys to set cursor position to lower boundary
 function! columnMove#DownMap ()
-    let [lnum, colnum] = columnMove#FindBoundary(s:DOWN)
-    return (lnum - line('.')) . 'j'
+    return columnMove#Map(s:DOWN)
 endfunc
 
+" Returns normal-keys to set cursor position to boundary in {dir} direction
+function! columnMove#Map (dir, ...)
+    let dir  = a:dir
+    let mode = get(a:, 1, 'n')
+    let [lnum, colnum] = columnMove#FindBoundary(dir)
+
+    " if (mode ==# 'n') end
+    let keys = printf("%igg%i|", lnum, colnum)
+    call s:log('keys', keys)
+    return keys
+endfunc
 
 
 " Inspection/debugging functions:
 
 " Inspect current char and relative boundaries.
-function! columnMove#Debug ()
-    let lnum = line('.')  "  search from cursor-line
-    let colnum = col('.') " 1-based column number
-    let pattern = '\v\S'
-    if (s:charAt(lnum, colnum) =~# '\v\S')
-        let pattern = '\v^$'
-    end
-
-    call s:log('pos', line('.'), col('.'))
-    call s:log('char', s:charAt(lnum, colnum))
-    call s:log('patt', pattern)
-
-    echo ''
-
-    call s:log('upMap', columnMove#FindBoundary(s:UP)[0], columnMove#UpMap())
-    call s:log('downMap', columnMove#FindBoundary(s:DOWN)[0], columnMove#DownMap())
-endfunc
+" function! columnMove#Debug (...)
+    " let direction = a:dir
+    " let lnum = line('.')  "  search from cursor-line
+    " let colnum = col('.') " 1-based column number
+    " let [nextLine, nextCol] = columnMove#FindBoundary(direction)
+    " call s:log('keys', columnMove#Map(direction))
+" endfunc
 
 " Log & label
 function! s:log (label, ...)
-    echohl Label
-    echon a:label . ': '
+    if !get(g:, 'columnMove_debug', 0)
+        return | end
 
-    let types = ['Number', 'String', 'Function',
-                \ 'List', 'Dict', 'Float',
+    if !empty(a:label) && type(a:label) == 1
+        echohl Label
+        echon a:label . ': '
+    end
+
+    let type_hl = ['Number', 'String', 'Function',
+                \ 'Number', 'Dict', 'Float',
                 \ 'Boolean', 'Null' ]
 
     for value in a:000
-        execute 'echohl ' . types[type(value)]
-        echon string(value) . ((value != a:000[-1]) ? ', ' : ' ')
+        execute 'echohl ' . type_hl[type(value)]
+        if type(value) == 1
+            echon value
+        else
+            echon string(value) | end
+        " elseif type(value) == 3
+            " call call(<SID>log, [0] + value)
+
+        if (value != a:000[-1])
+            echohl Delimiter
+            echon ', '
+        else
+            echon ' ' | end
     endfor
 
     echohl None
 endfunc
-
 
